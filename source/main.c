@@ -87,9 +87,8 @@ static void      readCompassAcc    (float_t *pfData);
 static uint32_t  readCompassMag    (float_t *pfData);
 static void      initFFTBuffers    (void);
 
-//int32_t        processMagnData         (int32_t mCycle, float32_t *MagBuffer, float32_t **fftInBuf, float32_t **gmssFFTbuf);
 int32_t          processMagnData         (int32_t mCycle, float32_t *MagBuffer);
-int32_t          updateSpectreStatistics (int32_t mCycle);//, float32_t **gmssFFTbuf, float32_t **S3Data);
+int32_t          updateSpectreStatistics (int32_t mCycle);
 void             transmitSpectre         (void);
 
 uint32_t         LSM303DLHC_TIMEOUT_UserCallback (void);
@@ -125,9 +124,8 @@ int  main (void)
     initFFTBuffers ();
 
     configMagnCompass ();
-    /* init the FFT module */
 
-//  status = arm_cfft_radix4_init_f32 (&S, GMSS_FFT_SIZE, 0, 1);
+    /* init the FFT module */
     status = arm_rfft_fast_init_f32 (&S, GMSS_FFT_SIZE);
 
     sprintf ((char *)txBuffer, "#gmss_1 : %1d,%3d\n", GMSS_CHANNELS, GMSS_FFT_SIZE);
@@ -272,53 +270,6 @@ static void  evbLedsOn (void)
     STM_EVAL_LEDOn (LED8);
     STM_EVAL_LEDOn (LED9);
     STM_EVAL_LEDOn (LED10);
-}
-
-
-
-/* set amplitude display;
- * levels :
- *   0 -> 1 -> 2 ->  3 -> 4 -> 5 -> 6 -> 7 -> 8
- *   - ->LD4->LD6->LD8->LD10->LD9->LD7->LD5->LD3
- *   0%  12%  25%  37%   50%  63%  75%  87%  100%  
- */
-static void  setAmpLevelDisplay (uint32_t aLevel)
-{
-    // on sequence
-    if (aLevel > 0)
-        STM_EVAL_LEDOn (LED4);
-    if (aLevel > 1)
-        STM_EVAL_LEDOn (LED6);
-    if (aLevel > 2)
-        STM_EVAL_LEDOn (LED8);
-    if (aLevel > 3)
-        STM_EVAL_LEDOn (LED10);
-    if (aLevel > 4)
-        STM_EVAL_LEDOn (LED9);
-    if (aLevel > 5)
-        STM_EVAL_LEDOn (LED7);
-    if (aLevel > 6)
-        STM_EVAL_LEDOn (LED5);
-    if (aLevel > 7)
-        STM_EVAL_LEDOn (LED3);
-
-    // off sequence
-    if (aLevel < 8)
-        STM_EVAL_LEDOff (LED3);
-    if (aLevel < 7)
-        STM_EVAL_LEDOff (LED5);
-    if (aLevel < 6)
-        STM_EVAL_LEDOff (LED7);
-    if (aLevel < 5)
-        STM_EVAL_LEDOff (LED9);
-    if (aLevel < 4)
-        STM_EVAL_LEDOff (LED10);
-    if (aLevel < 3)
-        STM_EVAL_LEDOff (LED8);
-    if (aLevel < 2)
-        STM_EVAL_LEDOff (LED6);
-    if (aLevel < 1)
-        STM_EVAL_LEDOff (LED4);
 }
 
 
@@ -533,7 +484,6 @@ static void  initFFTBuffers (void)
  * and perform a FFT fore each (x,y,z);
  * the mCycle count runs from 0 to 255
  */
-//int32_t  processMagnData (int32_t mCycle, float32_t *MagBuffer, float32_t **fftInBuf, float32_t **gmssFFTbuf)
 int32_t  processMagnData (int32_t mCycle, float32_t *MagBuffer)
 {
     float_t *pfft;
@@ -548,22 +498,20 @@ int32_t  processMagnData (int32_t mCycle, float32_t *MagBuffer)
     if (mCycle < (GMSS_FFT_SIZE-1))
         return (SENSDATA_NO_ACTION);
 
+    STM_EVAL_LEDOn (LED4);
+
     pfft = &(fftInBuf[CH_X][0]);
-//  arm_cfft_radix4_f32 (&S, pfft);
     arm_rfft_fast_f32 (&S, pfft, gmssFFTbuf[CH_X], 0);
-//  arm_cmplx_mag_f32 (pfft, gmssFFTbuf[CH_X], GMSS_FFT_SIZE);
 
     pfft = &(fftInBuf[CH_Y][0]);
-//  arm_cfft_radix4_f32 (&S, pfft);
     arm_rfft_fast_f32 (&S, pfft, gmssFFTbuf[CH_Y], 0);
-//  arm_cmplx_mag_f32 (pfft, gmssFFTbuf[CH_Y], GMSS_FFT_SIZE);
 
     pfft = &(fftInBuf[CH_Z][0]);
-//  arm_cfft_radix4_f32 (&S, pfft);
     arm_rfft_fast_f32 (&S, pfft, gmssFFTbuf[CH_Z], 0);
-//  arm_cmplx_mag_f32 (pfft, gmssFFTbuf[CH_Z], GMSS_FFT_SIZE);
 
-    return (updateSpectreStatistics (mCycle));//, (float32_t **) gmssFFTbuf, (float32_t **)S3Data));
+    STM_EVAL_LEDOff (LED4);
+
+    return (updateSpectreStatistics (mCycle));
 }
 
 
@@ -572,9 +520,10 @@ int32_t  processMagnData (int32_t mCycle, float32_t *MagBuffer)
  * until the <SPECTRE_AVG_CYCLES> count is reached, values are
  * only summed up, and SENSDATA_NO_ACTION is returned;
  * when <SPECTRE_AVG_CYCLES> is reached, the average is calculated,
- * and SENSDATA_DO_TX is returned, signalling that TX data are ready 
+ * the results are copied to t dedicated transmit buffer, and
+ * SENSDATA_DO_TX is returned, signalling that TX data are ready 
  */
-int32_t  updateSpectreStatistics (int32_t mCycle)//, float32_t **gmssFFTbuf, float32_t **S3Data)
+int32_t  updateSpectreStatistics (int32_t mCycle)
 {
     static int32_t  sstime = 0; // SPECTRE_AVG_CYCLES;
     int32_t         i;
@@ -611,6 +560,7 @@ int32_t  updateSpectreStatistics (int32_t mCycle)//, float32_t **gmssFFTbuf, flo
 void  transmitSpectre (void)
 {
     txSendCount = 0;
+    STM_EVAL_LEDOn (LED3);
     sprintf ((char *)txBuffer, "%d:%f,%f,%f\n", txSendCount, STxData[CH_X][0], STxData[CH_Y][0], STxData[CH_Z][0]);
     txSendCount++;
     initsendData ();

@@ -25,7 +25,7 @@
 #define CH_X                       0
 #define CH_Y                       1
 #define CH_Z                       2
-#define SPECTRE_AVG_CYCLES         50
+#define SPECTRE_AVG_CYCLES         60  // 50 cycles does not work reliably, Tx overlap !
 
 
 /* magnetometer */

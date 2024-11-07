@@ -122,12 +122,10 @@ void SysTick_Handler(void)
 }
 
 
-/******************************************************************************/
-/*                 STM32F30x Peripherals Interrupt Handlers                   */
-/*  Add here the Interrupt Handler for the used peripheral(s) (PPP), for the  */
-/*  available peripheral interrupt handler's name please refer to the startup */
-/*  file (startup_stm32f30x.s).                                            */
-/******************************************************************************/
+/**
+ ** STM32F30x Peripherals Interrupt Handlers;
+ ** for peripheral interrupt handler names refer to startup_stm32f30x.s
+ **/
 
 /** EXTI0_IRQ Handler; rising only
   */
@@ -154,9 +152,11 @@ void TIM3_IRQHandler(void)
     if (TIM_GetITStatus (TIM3, TIM_IT_Update) != RESET)
     {
         TIM_ClearITPendingBit (TIM3, TIM_IT_Update);  /* clear pending flag   */
-/** Debug: zum Messen des Timings eine LED umschalten (LED5, orange)
+#if 0
+/** Debug: toggle LED to measure the timings(LED5, orange)
   */
         STM_EVAL_LEDToggle (LED5);
+#endif
         sampleFlag = 1;
 #if 0
         ADC_StartConversion (ADC1);   /* Start ADC conversion */
@@ -193,6 +193,7 @@ void  USART3_IRQHandler (void)
                 USART3->ICR     = 0x000FFFFF;
                 transmitRunning = 0;
                 txSendCount     = 0;          // reset table index
+                STM_EVAL_LEDOff (LED3);
             }
         }
     }
