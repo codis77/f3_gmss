@@ -1,16 +1,16 @@
 
 /* TIM3 interrupt request handler
  */
-#define CCR1_VALUE_44K1             23     // Timerwert fuer 44.100 kHz Audioabtastrate
-#define CCR1_VALUE_22K05            45     // Timerwert fuer 22.050 kHz Audioabtastrate
-#define CCR1_VALUE_11K025           91     // Timerwert fuer 11.025 kHz Audioabtastrate
-#define CCR1_VALUE_8K0             125     // Timerwert fuer  8.000 kHz Audioabtastrate
-#define CCR1_VALUE_4K0             250     // Timerwert fuer  4.000 kHz Audioabtastrate
-#define CCR1_VALUE_2K0             500     // Timerwert fuer  2.000 kHz Audioabtastrate
-#define CCR1_VALUE_1K0            1000     // Timerwert fuer  1.000 kHz Audioabtastrate
+#define CCR1_VALUE_44K1             23     // Timer value for 44.100 kHz sampling rate
+#define CCR1_VALUE_22K05            45     // Timer value for 22.050 kHz sampling rate
+#define CCR1_VALUE_11K025           91     // Timer value for 11.025 kHz sampling rate
+#define CCR1_VALUE_8K0             125     // Timer value for  8.000 kHz sampling rate
+#define CCR1_VALUE_4K0             250     // Timer value for  4.000 kHz sampling rate
+#define CCR1_VALUE_2K0             500     // Timer value for  2.000 kHz sampling rate
+#define CCR1_VALUE_1K0            1000     // Timer value for  1.000 kHz sampling rate
 
 /* TIM3 TRGO update rate constants;
- * Periodendauer-Werte fuer die o.g. Abtastfrequenzen
+ * timer period values for given frequencies
  */
 #if TIM3_BASE_10MHz
 #define TIM3_TRGO_VALUE_44K1       227     // 44.100 kHz (226.8)
@@ -29,6 +29,7 @@
   #define TIM3_TRGO_VALUE_2K0     8000                //  2.000 kHz
   #define TIM3_TRGO_VALUE_1K0    16000                //  1.000 kHz
   #define TIM3_TRGO_VALUE_0K4    40000                //    400 kHz
+  #define TIM3_TRGO_VALUE_0K256  62500                //    256 kHz
 #endif
 
 /* -------- Prototypen --------

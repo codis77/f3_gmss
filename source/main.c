@@ -4,16 +4,12 @@
 *
 *        infraSensor
 *
-* An application to collect infrasound data via the 2SMPP-03 analogue
-* pressure sensor, and store them on a PC atached via RS232 line.
-* The application is based upon the STM32F3 Discovery board, with
-* the pressure sensor attached to the ADC input via glue logic
-* (opamp preamlifier).
+* An application to collect magnetic field data via the onboard
+* LSM303DLHC MEMS sensor, and store them on a PC attached via RS232.
+* The application is based upon the STM32F3 Discovery board.
 * 
-* The sensor is interfaced via ADC, and 12-bit values representing
-* a pressure range of -50P ... +50P are read outcyclically.
-* The default sampling rate is 1kHz, and the default RS232 connection
-* settings are 8N1@115200bps
+* The default sampling rate is 256Hz, and the default
+* RS232 connection settings are 8N1@115200bps
 *
 **********************************************************************
 */
@@ -41,11 +37,12 @@
 #define SENSDATA_NO_ACTION               0
 #define SENSDATA_DO_TX                   1
 
+#define SAMPLE_RATE                      256 /* for host communication*/
+
 /* typedefs ----------------------------------------------------------*/
 
 /* global variables --------------------------------------------------*/
 volatile uint32_t      TimingCounter   = 0;
-/* volatile uint32_t      newAdcValue     = 0;    // "ready" flag */
 volatile uint32_t      sampleFlag      = 0;
 volatile uint32_t      apValue         = 0;    // actual ADC value
 volatile uint32_t      transmitRunning = 0;
@@ -53,6 +50,7 @@ volatile int32_t       mCycle          = 0;
 volatile char          txBuffer[TX_BUF_SIZE];
 volatile uint32_t      txSendCount     = 0;
 volatile uint32_t      txIndex         = 0;
+volatile uint32_t      ubtnChange      = 0;  /* flag for user button */
 
 float_t                MagBuffer[3]    = {0.0f};
 float_t                AccBuffer[3]    = {0.0f};
@@ -65,8 +63,6 @@ float_t                fftInBuf[GMSS_FFT_CHANNELS][GMSS_FFT_SIZE]   = {{0},{0}};
 static arm_rfft_fast_instance_f32  S;
 static arm_status                  status;
 
-
-volatile uint32_t      ubtnChange      = 0;  /* flag for user button */
 
 /* external variables -------------------------------------------------*/
 
@@ -115,20 +111,19 @@ int  main (void)
     initUSART ();
     evb_LedsInit ();
     pbInit ();
-#ifdef _RUN_AP_ADC_
-    initADC ();
-#endif 
-    SampleTimerConfig (TIM3_TRGO_VALUE_0K4);   /* 400Hz sample rate */
 
-    /* magnetic compass init */
+    /* initialize the sampling timer */
+//  SampleTimerConfig (TIM3_TRGO_VALUE_0K4);    /* 400Hz sample rate */
+    SampleTimerConfig (TIM3_TRGO_VALUE_0K256);   /* try 256Hz instead */
+
+    /* buffer and magnetic compass init */
     initFFTBuffers ();
-
     configMagnCompass ();
 
     /* init the FFT module */
     status = arm_rfft_fast_init_f32 (&S, GMSS_FFT_SIZE);
 
-    sprintf ((char *)txBuffer, "#gmss_1 : %1d,%3d\n", GMSS_CHANNELS, GMSS_FFT_SIZE);
+    sprintf ((char *)txBuffer, "#gmss_1 : %1d,%3d @%d\n", GMSS_CHANNELS, GMSS_FFT_SIZE, SAMPLE_RATE);
     sendHeader ((char *)txBuffer, strlen((char *)txBuffer));
 
     /* main loop, 2.5ms cycle (400Hz magnetometer sample rate);
@@ -136,17 +131,6 @@ int  main (void)
      */
     while (1)
     {
-#ifdef _RUN_AP_ADC_
-        if (newAdcValue)
-        {
-            newAdcValue = 0;
-            tVal = (uint16_t) apValue;
-
-            evbLedsOn ();
-            sendDataItem (tVal);
-            evbLedsOff ();
-        }
-#endif
         if (sampleFlag)
         {
             sampleFlag = 0;
