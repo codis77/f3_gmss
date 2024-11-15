@@ -123,7 +123,7 @@ int  main (void)
     /* init the FFT module */
     status = arm_rfft_fast_init_f32 (&S, GMSS_FFT_SIZE);
 
-    sprintf ((char *)txBuffer, "#gmss_1 : %1d,%3d @%d\n", GMSS_CHANNELS, GMSS_FFT_SIZE, SAMPLE_RATE);
+    sprintf ((char *)txBuffer, "#gmss_1:%1d,%3d@%d\n", GMSS_CHANNELS, GMSS_FFT_SIZE, SAMPLE_RATE);
     sendHeader ((char *)txBuffer, strlen((char *)txBuffer));
 
     /* main loop, 2.5ms cycle (400Hz magnetometer sample rate);
@@ -307,9 +307,9 @@ static void  sendDataItem (void)
 static void  initsendData (void)
 {
     // initialize UART TXE interrupt, and send first character
-    USART3->CR1 |= USART_CR1_TXEIE;
     txIndex      = 1;                // next character
     USART3->TDR  = txBuffer[0];
+    USART3->CR1 |= USART_CR1_TXEIE;
 }
 
 
@@ -530,6 +530,7 @@ int32_t  updateSpectreStatistics (int32_t mCycle)
             STxData[CH_Y][i] = S3Data[CH_Y][i];
             STxData[CH_Z][i] = S3Data[CH_Z][i];
         }
+        sstime = 0;
         return (SENSDATA_DO_TX);
     }
     else
@@ -545,7 +546,7 @@ void  transmitSpectre (void)
 {
     txSendCount = 0;
     STM_EVAL_LEDOn (LED3);
-    sprintf ((char *)txBuffer, "%d:%f,%f,%f\n", txSendCount, STxData[CH_X][0], STxData[CH_Y][0], STxData[CH_Z][0]);
+    sprintf ((char *)txBuffer, "%1i:%f,%f,%f\n", txSendCount+1, STxData[CH_X][0], STxData[CH_Y][0], STxData[CH_Z][0]);
     txSendCount++;
     initsendData ();
 }

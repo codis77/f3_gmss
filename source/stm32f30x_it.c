@@ -182,7 +182,7 @@ void  USART3_IRQHandler (void)
         {
             if (txSendCount < GMSS_FFT_SIZE)  // next string
             {
-                sprintf ((char *)txBuffer, "%d:%f,%f,%f\n", txSendCount, STxData[CH_X][txSendCount], STxData[CH_Y][txSendCount], STxData[CH_Z][txSendCount]);
+                sprintf ((char *)txBuffer, "%1i:%f,%f,%f\n", txSendCount+1, STxData[CH_X][txSendCount], STxData[CH_Y][txSendCount], STxData[CH_Z][txSendCount]);
                 txIndex = 1;
                 USART3->TDR = txBuffer[0];
                 txSendCount++;
