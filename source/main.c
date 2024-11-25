@@ -123,7 +123,7 @@ int  main (void)
     /* init the FFT module */
     status = arm_rfft_fast_init_f32 (&S, GMSS_FFT_SIZE);
 
-    sprintf ((char *)txBuffer, "#gmss_1:%1d,%3d@%d\n", GMSS_CHANNELS, GMSS_FFT_SIZE, SAMPLE_RATE);
+    sprintf ((char *)txBuffer, "#gmss_1 : %1d,%3d @%d\n", GMSS_CHANNELS, GMSS_FFT_SIZE, SAMPLE_RATE);
     sendHeader ((char *)txBuffer, strlen((char *)txBuffer));
 
     /* main loop, 2.5ms cycle (400Hz magnetometer sample rate);
@@ -539,14 +539,16 @@ int32_t  updateSpectreStatistics (int32_t mCycle)
 
 
 
-/* initiate the seial transmission;
- * prepare the first package, and get the interrupt chain going
+/* initiate the serial transmission;
+ * prepare the first package, and get the interrupt chain going;
+ * alltogether, (1 + GMSS_FFT_SIZE/2) triples are transmitted;
+ * redundant items of the RFFT result are discarded
  */
 void  transmitSpectre (void)
 {
     txSendCount = 0;
     STM_EVAL_LEDOn (LED3);
-    sprintf ((char *)txBuffer, "%1i:%f,%f,%f\n", txSendCount+1, STxData[CH_X][0], STxData[CH_Y][0], STxData[CH_Z][0]);
+    sprintf ((char *)txBuffer, "%1i:%f,%f,%f\n", txSendCount, STxData[CH_X][0], STxData[CH_Y][0], STxData[CH_Z][0]);
     txSendCount++;
     initsendData ();
 }
