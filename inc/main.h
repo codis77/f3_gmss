@@ -25,12 +25,12 @@
 #define CH_X                       0
 #define CH_Y                       1
 #define CH_Z                       2
-#define SPECTRE_AVG_CYCLES         60  // 50 cycles does not work reliably, Tx overlap !
+#define SPECTRE_AVG_CYCLES         60  // averaging over one minute
 
 
 /* magnetometer */
 #define MGN_SENS_FACTOR            1.3f           /* run a 1.3 Gauss sensitivity scale */
-#define MGN_FULLSCALE              32767.0f       /* fullscale factor                  */
+#define MGN_FULLSCALE              32767.0f       /* fullscale factor; 16-bit signed   */
 
 #define GMSS_FFT_SIZE              256            /*!< FFT block size; 512 is not supported !  */
 #define GMSS_FFT_CHANNELS          3              /*!< for all 3 channels (x,y,z) individually */
