@@ -417,11 +417,11 @@ uint32_t  readCompassMag (float_t *pfData)
 
 
     f         = (float_t) (int16_t)(((uint16_t)buffer[0] << 8) + buffer[1]);
-    pfData[0] = MGN_SENS_FACTOR * f / MGN_FULLSCALE;
+    pfData[0] = UNITY_SCALE_FACTOR * f / MGN_FULLSCALE;
     f         = (float_t) (int16_t)(((uint16_t)buffer[2] << 8) + buffer[3]);
-    pfData[1] = MGN_SENS_FACTOR * f / MGN_FULLSCALE;
+    pfData[1] = UNITY_SCALE_FACTOR * f / MGN_FULLSCALE;
     f         = (float_t) (int16_t)(((uint16_t)buffer[4] << 8) + buffer[5]);
-    pfData[2] = MGN_SENS_FACTOR * f / MGN_FULLSCALE;
+    pfData[2] = UNITY_SCALE_FACTOR * f / MGN_FULLSCALE;
 
     // sensitivity is identical for both XY and Z axis, but the factors are slightly different
     return (sensindex);

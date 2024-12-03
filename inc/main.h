@@ -30,7 +30,8 @@
 
 /* magnetometer */
 #define MGN_SENS_FACTOR            1.3f           /* run a 1.3 Gauss sensitivity scale */
-#define MGN_FULLSCALE              32767.0f       /* fullscale factor; 16-bit signed   */
+#define UNITY_SCALE_FACTOR         1.0f           /* for FFT, scale to [-1.0 .. +1]    */
+#define MGN_FULLSCALE              32767.0f       /* fullscale factor                  */
 
 #define GMSS_FFT_SIZE              256            /*!< FFT block size; 512 is not supported !  */
 #define GMSS_FFT_CHANNELS          3              /*!< for all 3 channels (x,y,z) individually */
